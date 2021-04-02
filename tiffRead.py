@@ -6,6 +6,14 @@ print_dir_info = True
 
 #f = open("CMU-3.svs", "rb")
 f = open("sample.svs", "rb")
+#endianness
+endianness = f.read(2).decode("utf-8")
+if endianness == "MM":
+    endianness = "big"
+else:
+    endianness = "little"
+
+print("endianness", endianness)
 # constant
 res = f.read(2)
 print("constant", res.hex())
@@ -14,7 +22,7 @@ res = f.read(2)
 print("version", res.hex())
 # first offset
 res = f.read(4)
-first_offset = int.from_bytes(res, "little")
+first_offset = int.from_bytes(res, endianness)
 print("offset", first_offset)
 
 
@@ -23,7 +31,7 @@ dir_count = 0
 print("-", first_offset)
 f.seek(first_offset, 0)
 res = f.read(2)
-dir_entries = int.from_bytes(res, "little")
+dir_entries = int.from_bytes(res, endianness)
 more_data = True
 
 while more_data:
@@ -35,13 +43,13 @@ while more_data:
     datas = []
 
     for i in range(dir_entries):
-        tags.append(f.read(2))
-        types.append(f.read(2))
-        elem_counts.append(f.read(4))
-        datas.append(f.read(4))
+        tags.append(int.from_bytes(f.read(2), endianness))
+        types.append(int.from_bytes(f.read(2), endianness))
+        elem_counts.append(int.from_bytes(f.read(4), endianness))
+        datas.append(int.from_bytes(f.read(4), endianness))
 
     next_dir = f.read(4)
-    next_dir = int.from_bytes(next_dir, "little")
+    next_dir = int.from_bytes(next_dir, endianness)
     if not next_dir:
         more_data = False
     else:
