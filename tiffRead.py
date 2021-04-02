@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-print_dir_info = True
+print_dir_info = False
 
 # grab a file
 
@@ -10,16 +10,21 @@ f = open("sample.svs", "rb")
 endianness = f.read(2).decode("utf-8")
 if endianness == "MM":
     endianness = "big"
-else:
+elif endianness == "II":
     endianness = "little"
+else:
+    raise Exception("Expecting II or MM for endianness, got: " + endianness)
 
-print("endianness", endianness)
 # constant
 res = f.read(2)
-print("constant", res.hex())
+constant = int.from_bytes(res, endianness)
+
+if not constant == 42:
+    raise Exception("Expecting 42 for constant, got: " + str(constant))
+
 # version
 res = f.read(2)
-print("version", res.hex())
+print("version", int.from_bytes(res, endianness))
 # first offset
 res = f.read(4)
 first_offset = int.from_bytes(res, endianness)
@@ -36,7 +41,6 @@ more_data = True
 
 while more_data:
     dir_count += 1
-    print(dir_count)
     tags = []
     types = []
     elem_counts = []
@@ -65,20 +69,3 @@ while more_data:
         print("data", datas)
 
 print("I found a total of " + str(dir_count) + " directories")
-
-# see http://bigtiff.org/
-
-# read file
-
-# header
-# is this tiff or bigtiff?
-# bytesize of offsets, if applicable (bigtiff)
-# offset to first directory
-
-# number of directory entries
-
-# for each one...
-# datatype (TODO what do these mean??)
-# elements in entry
-# data -- offset or data itself
-# offset to next directory, or 0
