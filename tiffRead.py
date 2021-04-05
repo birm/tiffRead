@@ -33,7 +33,6 @@ print("offset", first_offset)
 
 dir_count = 0
 
-print("-", first_offset)
 f.seek(first_offset, 0)
 res = f.read(2)
 dir_entries = int.from_bytes(res, endianness)
@@ -54,6 +53,7 @@ while more_data:
 
     next_dir = f.read(4)
     next_dir = int.from_bytes(next_dir, endianness)
+    print("offset", next_dir)
     if not next_dir:
         more_data = False
     else:
