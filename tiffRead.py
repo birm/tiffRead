@@ -2,9 +2,21 @@
 
 print_dir_info = True
 
+tagmap = {254: "NewSubfileType", 256: "ImageWidth", 257: "ImageLength", 258: "BitsPerSample",
+259: "Compression", 262: "PhotometricInterpretation", 273: "StripOffsets", 277: "SamplesPerPixel",
+278: "RowsPerStrip", 279: "StripByteCounts", 282: "XResolution", 283: "YResolution", 296 : "ResolutionUnit"}
+
+def interpretDir(tags, types, counts, data):
+    res = []
+    for i in range(len(tags)):
+        src = tagmap.get(tags[i], tags[i])
+        dst = data[i]
+        res.append(str(src) + " : " + str(dst))
+    return res
+
 # grab a file
 
-with open("sample.svs", "rb") as f:
+with open("./sample.svs", "rb") as f:
     #endianness
     endianness = f.read(2).decode("utf-8")
     if endianness == "MM":
@@ -59,9 +71,6 @@ with open("sample.svs", "rb") as f:
         if print_dir_info:
             print("=====DIRECTORY=====")
             print("# of entries", dir_entries)
-            print("tags", tags)
-            print("types", types)
-            print("counts", elem_counts)
-            print("data", datas)
+            print("\n".join(interpretDir(tags, types, elem_counts, datas)))
 
 print("I found a total of " + str(dir_count) + " directories")
