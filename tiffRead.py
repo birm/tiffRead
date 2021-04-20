@@ -2,9 +2,28 @@
 
 print_dir_info = True
 
-tagmap = {254: "NewSubfileType", 256: "ImageWidth", 257: "ImageLength", 258: "BitsPerSample",
-259: "Compression", 262: "PhotometricInterpretation", 273: "StripOffsets", 277: "SamplesPerPixel",
-278: "RowsPerStrip", 279: "StripByteCounts", 282: "XResolution", 283: "YResolution", 296 : "ResolutionUnit"}
+tagmap = {
+254: "NewSubfileType",
+256: "ImageWidth",
+257: "ImageLength",
+258: "BitsPerSample",
+259: "Compression",
+262: "PhotometricInterpretation",
+270: "ImageDescription",
+273: "StripOffsets",
+277: "SamplesPerPixel",
+278: "RowsPerStrip",
+279: "StripByteCounts",
+282: "XResolution",
+283: "YResolution",
+284: "PlanarConfiguration",
+296: "ResolutionUnit",
+320: "ColorMap",
+322: "TileWidth",
+323: "TileLength",
+324: "TileOffsets",
+325: "TileByteCounts",
+530: "YCbCrSubSampling"}
 
 def interpretDir(tags, types, counts, data):
     res = []
