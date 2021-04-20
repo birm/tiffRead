@@ -25,12 +25,32 @@ tagmap = {
 325: "TileByteCounts",
 530: "YCbCrSubSampling"}
 
-def interpretDir(tags, types, counts, data):
+datatypes = {
+1: "BYTE",
+2: "ASCII",
+3: "SHORT",
+4: "LONG",
+5: "RATIONAL",
+6: "SBYTE",
+7: "UNDEFINE",
+8: "SSHORT",
+9: "SLONG",
+10: "SRATIONAL",
+11: "FLOAT",
+12: "DOUBLE"
+}
+
+def interpretDir(tags, types, counts, data, file):
     res = []
     for i in range(len(tags)):
         src = tagmap.get(tags[i], tags[i])
         dst = data[i]
-        res.append(str(src) + " : " + str(dst))
+        type = datatypes.get(types[i], types[i])
+        if type == "ASCII":
+            file.seek(dst)
+            dst = file.read(counts[i])
+            print(str(src))
+        res.append(str(src) + " : " + str(dst) + " dt: " + str(type))
     return res
 
 # grab a file
@@ -90,6 +110,6 @@ with open("./sample.svs", "rb") as f:
         if print_dir_info:
             print("=====DIRECTORY=====")
             print("# of entries", dir_entries)
-            print("\n".join(interpretDir(tags, types, elem_counts, datas)))
+            print("\n".join(interpretDir(tags, types, elem_counts, datas, f)))
 
 print("I found a total of " + str(dir_count) + " directories")
