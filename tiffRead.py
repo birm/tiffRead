@@ -23,7 +23,9 @@ tagmap = {
 323: "TileLength",
 324: "TileOffsets",
 325: "TileByteCounts",
-530: "YCbCrSubSampling"}
+347: "JPEGTables",
+530: "YCbCrSubSampling",
+32997: "ImageDepth"}
 
 datatypes = {
 1: "BYTE",
@@ -40,17 +42,28 @@ datatypes = {
 12: "DOUBLE"
 }
 
+def expandedRead(file, pos, count):
+    orig = file.tell()
+    file.seek(pos)
+    res = file.read(count)
+    file.seek(orig)
+    return res
+
 def interpretDir(tags, types, counts, data, file):
     res = []
+    tiles = []
+    tileByteCounts = []
     for i in range(len(tags)):
         src = tagmap.get(tags[i], tags[i])
         dst = data[i]
         type = datatypes.get(types[i], types[i])
         if type == "ASCII":
-            file.seek(dst)
-            dst = file.read(counts[i])
-            print(str(src))
-        res.append(str(src) + " : " + str(dst) + " dt: " + str(type))
+            dst = expandedRead(file, dst, counts[i])
+        if src == "TileOffsets":
+            dst = expandedRead(file, dst, counts[i])
+        if src == "TileByteCounts":
+            dst = expandedRead(file, dst, counts[i])
+        res.append(str(src) + " : " + str(dst) + " dt: " + str(type) + " len: " + str(counts[i]))
     return res
 
 # grab a file
