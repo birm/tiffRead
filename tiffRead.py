@@ -1,4 +1,11 @@
 #!/usr/bin/python
+import argparse
+
+parser = argparse.ArgumentParser(prog="tiffRead", description='Read or Clear Tiff Fields.')
+parser.add_argument('--file', dest="file", default="./sample.svs", help='tiff-like file\'s path')
+parser.add_argument('--clear', dest="clear", default=False, type=int, help='Tag Number to clear')
+parser.add_argument('-p', action='store_true', dest="show", help="Print all directory info")
+args = parser.parse_args()
 
 print_dir_info = True
 
@@ -41,6 +48,8 @@ datatypes = {
 11: "FLOAT",
 12: "DOUBLE"
 }
+# keep track of things to clear
+toClear = []
 
 def expandedRead(file, pos, count):
     orig = file.tell()
@@ -49,26 +58,7 @@ def expandedRead(file, pos, count):
     file.seek(orig)
     return res
 
-def interpretDir(tags, types, counts, data, file):
-    res = []
-    tiles = []
-    tileByteCounts = []
-    for i in range(len(tags)):
-        src = tagmap.get(tags[i], tags[i])
-        dst = data[i]
-        type = datatypes.get(types[i], types[i])
-        if type == "ASCII":
-            dst = expandedRead(file, dst, counts[i])
-        if src == "TileOffsets":
-            dst = expandedRead(file, dst, counts[i])
-        if src == "TileByteCounts":
-            dst = expandedRead(file, dst, counts[i])
-        res.append(str(src) + " : " + str(dst) + " dt: " + str(type) + " len: " + str(counts[i]))
-    return res
-
-# grab a file
-
-with open("./sample.svs", "rb") as f:
+with open(args.file, "rb") as f:
     #endianness
     endianness = f.read(2).decode("utf-8")
     if endianness == "MM":
@@ -100,17 +90,27 @@ with open("./sample.svs", "rb") as f:
 
     while more_data:
         dir_count += 1
-        tags = []
-        types = []
-        elem_counts = []
-        datas = []
+        res = []
 
         for i in range(dir_entries):
-            tags.append(int.from_bytes(f.read(2), endianness))
-            types.append(int.from_bytes(f.read(2), endianness))
-            elem_counts.append(int.from_bytes(f.read(4), endianness))
-            datas.append(int.from_bytes(f.read(4), endianness))
-
+            pos = f.tell() + 4
+            tag = int.from_bytes(f.read(2), endianness)
+            tagName = tagmap.get(tag, tag)
+            tpe = int.from_bytes(f.read(2), endianness)
+            tpe = datatypes.get(tpe, tpe)
+            ec = int.from_bytes(f.read(4), endianness)
+            d = int.from_bytes(f.read(4), endianness)
+            method = "direct"
+            if ec > 4: # is this right?
+                pos = d
+                d = expandedRead(f, d, ec)
+                method = "expanded"
+            c = {"pos": pos, "tag": tag, "tagName": tagName, "type": tpe, "len": ec, "data": d}
+            res.append(c)
+            # prepare for a clear
+            if args.clear and tag == args.clear:
+                # TODO ask for confirm maybe?
+                toClear.append(c)
         next_dir = f.read(4)
         next_dir = int.from_bytes(next_dir, endianness)
         print("offset", next_dir)
@@ -119,10 +119,18 @@ with open("./sample.svs", "rb") as f:
         else:
             f.seek(next_dir, 0)
 
-
-        if print_dir_info:
+        if args.show:
             print("=====DIRECTORY=====")
             print("# of entries", dir_entries)
-            print("\n".join(interpretDir(tags, types, elem_counts, datas, f)))
+            print(res)
 
 print("I found a total of " + str(dir_count) + " directories")
+
+print(toClear)
+# clearing time
+if args.clear:
+    with open(args.file, "r+b") as wf:
+        for c in toClear:
+            print(c)
+            wf.seek(c['pos'])
+            wf.write(b'\0' * c['len'])
