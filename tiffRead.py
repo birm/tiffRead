@@ -4,8 +4,8 @@ import argparse
 parser = argparse.ArgumentParser(prog="tiffRead", description='Read or Clear Tiff Fields.')
 parser.add_argument('--file', dest="file", default="./sample.svs", help='tiff-like file\'s path')
 parser.add_argument('--clear', dest="clear", default=False, type=int, help='Tag Number to clear')
-parser.add_argument('-s', action='store_true', dest="simplified", help="Print shortened directory info")
-parser.add_argument('-p', action='store_true', dest="show", help="Print all directory info (may cause memory exhaustion, be careful)")
+parser.add_argument('-s', action='store_true', dest="show", help="Print directory info")
+parser.add_argument('-l', dest="maxlen", default=100, type=int, help='Max Dir Entry length before truncation')
 args = parser.parse_args()
 
 print_dir_info = True
@@ -55,10 +55,10 @@ toClear = []
 def expandedRead(file, pos, count):
     orig = file.tell()
     file.seek(pos)
-    if args.show:
+    if count < args.maxlen or args.maxlen == -1:
         res = file.read(count)
     else:
-        res = "<chunk of size " + str(count) + ">"
+        res = file.read(args.maxlen) + b"...(truncated)..."
     file.seek(orig)
     return res
 
@@ -122,7 +122,6 @@ with open(args.file, "rb") as f:
             more_data = False
         else:
             f.seek(next_dir, 0)
-
         if args.show or args.simplified:
             print("=====DIRECTORY=====")
             print("# of entries", dir_entries)
