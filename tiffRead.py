@@ -58,7 +58,7 @@ def expandedRead(file, pos, count):
     if count < args.maxlen or args.maxlen == -1:
         res = file.read(count)
     else:
-        res = file.read(args.maxlen) + b"...(truncated)..."
+        res = file.read(args.maxlen)
     file.seek(orig)
     return res
 
@@ -136,4 +136,9 @@ if args.clear:
         for c in toClear:
             print(c)
             wf.seek(c['pos'])
-            wf.write(b'\0' * c['len'])
+            if c['type'] == "ASCII":
+                l = c['len'] - 1
+                wf.write(b' ' * l)
+                wf.write(b'\0')
+            else:
+                wf.write(b'\0' * c['len'])
