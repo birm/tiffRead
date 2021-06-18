@@ -122,7 +122,7 @@ with open(args.file, "rb") as f:
             more_data = False
         else:
             f.seek(next_dir, 0)
-        if args.show or args.simplified:
+        if args.show:
             print("=====DIRECTORY=====")
             print("# of entries", dir_entries)
             print(res)
